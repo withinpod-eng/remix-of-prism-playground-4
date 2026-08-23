@@ -57,7 +57,6 @@ export function SiteNav() {
             {[
               { label: "Search", Icon: Search },
               { label: "Wishlist", Icon: Heart },
-              { label: "Account", Icon: User },
             ].map(({ label, Icon }) => (
               <button
                 key={label}
@@ -68,6 +67,14 @@ export function SiteNav() {
                 <Icon className="size-4" />
               </button>
             ))}
+            <Link
+              to="/login"
+              aria-label="Account sign in"
+              className="hidden size-11 items-center justify-center rounded-full border border-border text-foreground/60 transition-colors hover:border-primary hover:text-primary sm:flex"
+            >
+              <User className="size-4" />
+            </Link>
+
             <button
               type="button"
               aria-label={open ? "Close menu" : "Open menu"}
