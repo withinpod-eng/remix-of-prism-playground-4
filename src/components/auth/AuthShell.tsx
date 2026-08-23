@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Asterisk, Eye, EyeOff, Loader2, MailCheck, Shield } from "lucide-react";
 import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import vaultVisual from "@/assets/auth-vault-ecosystem.jpg";
+
 
 export type AuthMode = "signup" | "login" | "forgot" | "reset";
 type ViewMode = AuthMode | "verify" | "sent" | "updated";
@@ -193,12 +196,16 @@ export function AuthShell({ initialMode }: { initialMode: AuthMode }) {
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const liveRef = useRef<HTMLParagraphElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => setView(initialMode), [initialMode]);
 
+
   const go = (next: ViewMode) => {
     setErrors({});
+    setFormError(null);
     setView(next);
     setAnimKey((k) => k + 1);
     const path = PATHS[next as AuthMode];
@@ -249,7 +256,7 @@ export function AuthShell({ initialMode }: { initialMode: AuthMode }) {
     }
   }, [view]);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const next: Errors = {};
 
@@ -270,24 +277,71 @@ export function AuthShell({ initialMode }: { initialMode: AuthMode }) {
     }
 
     setErrors(next);
+    setFormError(null);
     if (Object.keys(next).length > 0) return;
 
     setPending(true);
-    window.setTimeout(() => {
-      setPending(false);
-      setPassword("");
-      setConfirm("");
-      if (view === "signup") go("verify");
-      else if (view === "forgot") go("sent");
-      else if (view === "reset") go("updated");
-      else {
-        setErrors({ password: "We couldn't verify those details. Please check and try again." });
-        if (liveRef.current) liveRef.current.textContent = "Sign in failed.";
+    try {
+      if (view === "signup") {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/account`,
+            data: { full_name: name },
+          },
+        });
+        if (error) throw error;
+        setPassword("");
+        go("verify");
+      } else if (view === "login") {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        setPassword("");
+        navigate({ to: "/account", replace: true });
+      } else if (view === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        go("sent");
+      } else {
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+        setPassword("");
+        setConfirm("");
+        go("updated");
       }
-    }, 700);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      setFormError(message);
+      if (liveRef.current) liveRef.current.textContent = message;
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const onGoogle = async () => {
+    setFormError(null);
+    setPending(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        setFormError("Google sign-in didn't complete. Please try again.");
+        return;
+      }
+      if (result.redirected) return;
+      navigate({ to: "/account", replace: true });
+    } finally {
+      setPending(false);
+    }
   };
 
   const isFormView = view === "signup" || view === "login" || view === "forgot" || view === "reset";
+
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
@@ -467,6 +521,15 @@ export function AuthShell({ initialMode }: { initialMode: AuthMode }) {
                         />
                       ) : null}
 
+                      {formError ? (
+                        <p
+                          role="alert"
+                          className="rounded-2xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-[13px] leading-relaxed text-destructive"
+                        >
+                          {formError}
+                        </p>
+                      ) : null}
+
                       <div className="pt-3">
                         <PrimaryButton pending={pending}>
                           {view === "signup"
@@ -478,6 +541,33 @@ export function AuthShell({ initialMode }: { initialMode: AuthMode }) {
                                 : "Update Password"}
                         </PrimaryButton>
                       </div>
+
+                      {view === "signup" || view === "login" ? (
+                        <>
+                          <div className="flex items-center gap-4 pt-1">
+                            <span className="h-px flex-1 bg-border" />
+                            <span className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground/70">
+                              or
+                            </span>
+                            <span className="h-px flex-1 bg-border" />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={onGoogle}
+                            disabled={pending}
+                            className="inline-flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-border bg-background/70 text-[15px] font-medium text-foreground transition-colors hover:border-primary/60 hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-70"
+                          >
+                            <svg className="size-4" viewBox="0 0 24 24" aria-hidden>
+                              <path
+                                fill="currentColor"
+                                d="M12 11v3.2h5.3c-.2 1.4-1.6 4.1-5.3 4.1-3.2 0-5.8-2.6-5.8-5.9S8.8 6.5 12 6.5c1.8 0 3 .8 3.7 1.4l2.5-2.4C16.6 4 14.5 3 12 3 7 3 3 7 3 12s4 9 9 9c5.2 0 8.6-3.6 8.6-8.7 0-.6-.1-1-.2-1.4H12z"
+                              />
+                            </svg>
+                            Continue with Google
+                          </button>
+                        </>
+                      ) : null}
+
 
                       <p className="pt-1 text-center text-xs leading-relaxed text-muted-foreground/80">
                         Your account information is protected using the security measures
