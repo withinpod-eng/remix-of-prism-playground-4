@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Heart, Menu, Search, Shield, User, X } from "lucide-react";
+import { useSession } from "@/hooks/useSession";
+
 
 const links = [
   { label: "Shop", to: "/products" },
