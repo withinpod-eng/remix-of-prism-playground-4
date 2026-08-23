@@ -196,9 +196,12 @@ export function AuthShell({ initialMode }: { initialMode: AuthMode }) {
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const liveRef = useRef<HTMLParagraphElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => setView(initialMode), [initialMode]);
+
 
   const go = (next: ViewMode) => {
     setErrors({});
