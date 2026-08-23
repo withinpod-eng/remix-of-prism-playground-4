@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Asterisk, Eye, EyeOff, Loader2, MailCheck, Shield } from "lucide-react";
 import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import vaultVisual from "@/assets/auth-vault-ecosystem.jpg";
+
 
 export type AuthMode = "signup" | "login" | "forgot" | "reset";
 type ViewMode = AuthMode | "verify" | "sent" | "updated";
