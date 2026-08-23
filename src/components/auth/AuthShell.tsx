@@ -205,6 +205,7 @@ export function AuthShell({ initialMode }: { initialMode: AuthMode }) {
 
   const go = (next: ViewMode) => {
     setErrors({});
+    setFormError(null);
     setView(next);
     setAnimKey((k) => k + 1);
     const path = PATHS[next as AuthMode];
