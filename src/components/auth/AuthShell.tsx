@@ -83,8 +83,8 @@ function Field({
   placeholder: string;
   value: string;
   onChange: (v: string) => void;
-  error?: string;
-  autoComplete?: string;
+  error?: string | undefined;
+  autoComplete?: string | undefined;
   trailing?: React.ReactNode;
   labelAside?: React.ReactNode;
 }) {
@@ -255,15 +255,15 @@ export function AuthShell({ initialMode }: { initialMode: AuthMode }) {
 
     if (view === "signup") {
       const n = nameSchema.safeParse(name);
-      if (!n.success) next.name = n.error.issues[0].message;
+      if (!n.success) next.name = n.error.issues[0]?.message ?? "Please enter your full name.";
     }
     if (view === "signup" || view === "login" || view === "forgot") {
       const m = emailSchema.safeParse(email);
-      if (!m.success) next.email = m.error.issues[0].message;
+      if (!m.success) next.email = m.error.issues[0]?.message ?? "Please enter a valid email address.";
     }
     if (view === "signup" || view === "login" || view === "reset") {
       const p = passwordSchema.safeParse(password);
-      if (!p.success) next.password = p.error.issues[0].message;
+      if (!p.success) next.password = p.error.issues[0]?.message ?? "Password must be at least 8 characters.";
     }
     if (view === "reset" && confirm !== password) {
       next.confirm = "Passwords don't match.";
