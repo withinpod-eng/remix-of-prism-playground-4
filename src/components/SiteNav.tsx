@@ -68,12 +68,18 @@ export function SiteNav() {
               </button>
             ))}
             <Link
-              to="/login"
-              aria-label="Account sign in"
-              className="hidden size-11 items-center justify-center rounded-full border border-border text-foreground/60 transition-colors hover:border-primary hover:text-primary sm:flex"
+              to={session ? "/account" : "/login"}
+              aria-label={session ? "Your account" : "Account sign in"}
+              className={
+                "hidden size-11 items-center justify-center rounded-full border transition-colors sm:flex " +
+                (session
+                  ? "border-primary/60 text-primary"
+                  : "border-border text-foreground/60 hover:border-primary hover:text-primary")
+              }
             >
               <User className="size-4" />
             </Link>
+
 
             <button
               type="button"
