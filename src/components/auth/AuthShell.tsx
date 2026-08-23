@@ -249,7 +249,7 @@ export function AuthShell({ initialMode }: { initialMode: AuthMode }) {
     }
   }, [view]);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const next: Errors = {};
 
@@ -270,24 +270,71 @@ export function AuthShell({ initialMode }: { initialMode: AuthMode }) {
     }
 
     setErrors(next);
+    setFormError(null);
     if (Object.keys(next).length > 0) return;
 
     setPending(true);
-    window.setTimeout(() => {
-      setPending(false);
-      setPassword("");
-      setConfirm("");
-      if (view === "signup") go("verify");
-      else if (view === "forgot") go("sent");
-      else if (view === "reset") go("updated");
-      else {
-        setErrors({ password: "We couldn't verify those details. Please check and try again." });
-        if (liveRef.current) liveRef.current.textContent = "Sign in failed.";
+    try {
+      if (view === "signup") {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/account`,
+            data: { full_name: name },
+          },
+        });
+        if (error) throw error;
+        setPassword("");
+        go("verify");
+      } else if (view === "login") {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        setPassword("");
+        navigate({ to: "/account", replace: true });
+      } else if (view === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        go("sent");
+      } else {
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+        setPassword("");
+        setConfirm("");
+        go("updated");
       }
-    }, 700);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      setFormError(message);
+      if (liveRef.current) liveRef.current.textContent = message;
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const onGoogle = async () => {
+    setFormError(null);
+    setPending(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        setFormError("Google sign-in didn't complete. Please try again.");
+        return;
+      }
+      if (result.redirected) return;
+      navigate({ to: "/account", replace: true });
+    } finally {
+      setPending(false);
+    }
   };
 
   const isFormView = view === "signup" || view === "login" || view === "forgot" || view === "reset";
+
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
