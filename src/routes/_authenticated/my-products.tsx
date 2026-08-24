@@ -76,10 +76,6 @@ function MyProductsPage() {
 
           <Reveal delay={120}>
             <div className="mt-12 overflow-hidden rounded-[28px] border border-border bg-card/70 shadow-[0_30px_80px_-60px_rgba(0,0,0,0.9)] backdrop-blur-sm">
-              <span
-                aria-hidden
-                className="pointer-events-none absolute-none block h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent"
-              />
               {isLoading ? (
                 <p className="px-7 py-16 text-center text-sm text-muted-foreground">
                   Opening your vault…
