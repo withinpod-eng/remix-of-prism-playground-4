@@ -159,10 +159,18 @@ function MyDetailsCard({
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(name);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!editing) setValue(name);
   }, [name, editing]);
+
+  const cancel = () => {
+    setEditing(false);
+    setError(null);
+    setValue(name);
+  };
+
 
   const mutation = useMutation({
     mutationFn: async (fullName: string) => {
