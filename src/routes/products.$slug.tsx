@@ -1,5 +1,7 @@
+import { useNavigate } from "@tanstack/react-router";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, Check, Download, ShieldCheck, Star } from "lucide-react";
+import { ArrowLeft, Check, Download, ShieldCheck, ShoppingBag, Star } from "lucide-react";
+import { useCart } from "@/lib/cart";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Reveal } from "@/components/Reveal";
