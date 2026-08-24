@@ -198,13 +198,13 @@ function CartPage() {
                       <div className="mt-3 h-px w-16 bg-primary/70" />
                     </div>
 
-                    <button
-                      type="button"
+                    <Link
+                      to="/checkout"
                       className="group mt-7 flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-primary text-[15px] font-medium text-primary-foreground shadow-[0_12px_40px_-14px_color-mix(in_oklab,var(--primary)_75%,transparent)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_52px_-12px_color-mix(in_oklab,var(--primary)_85%,transparent)]"
                     >
                       Proceed to Checkout
                       <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
-                    </button>
+                    </Link>
 
                     <p className="mt-4 inline-flex items-center gap-2 text-xs text-muted-foreground">
                       <Lock className="size-3.5 text-primary" /> Secure checkout
