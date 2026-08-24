@@ -7,6 +7,7 @@ import { useSession } from "@/hooks/useSession";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Reveal } from "@/components/Reveal";
+import { z } from "zod";
 import { fetchPurchases } from "@/lib/purchases";
 
 const TITLE = "Your Account | Jays Vault";
@@ -134,6 +135,13 @@ function AccountPage() {
   );
 }
 
+/** Names are user-controlled text — validate before it reaches the database. */
+const nameSchema = z
+  .string()
+  .trim()
+  .min(1, { message: "Name cannot be empty." })
+  .max(100, { message: "Name must be less than 100 characters." });
+
 const cardClass =
   "relative h-full overflow-hidden rounded-[28px] border border-border bg-card/70 p-7 shadow-[0_30px_80px_-60px_rgba(0,0,0,0.9)] backdrop-blur-sm sm:p-9";
 
@@ -159,10 +167,18 @@ function MyDetailsCard({
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(name);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!editing) setValue(name);
   }, [name, editing]);
+
+  const cancel = () => {
+    setEditing(false);
+    setError(null);
+    setValue(name);
+  };
+
 
   const mutation = useMutation({
     mutationFn: async (fullName: string) => {
@@ -198,15 +214,26 @@ function MyDetailsCard({
               className="mt-3"
               onSubmit={(e) => {
                 e.preventDefault();
-                mutation.mutate(value.trim());
+                const parsed = nameSchema.safeParse(value);
+                if (!parsed.success) {
+                  setError(parsed.error.issues[0]?.message ?? "Invalid name.");
+                  return;
+                }
+                setError(null);
+                mutation.mutate(parsed.data);
               }}
             >
               <input
                 autoFocus
                 value={value}
+                maxLength={100}
                 onChange={(e) => setValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") cancel();
+                }}
                 aria-label="Your name"
-                className="w-full rounded-xl border border-border bg-background/60 px-4 py-3 text-[15px] text-foreground outline-none transition-colors focus:border-primary"
+                aria-invalid={Boolean(error)}
+                className="w-full rounded-xl border border-border bg-background/60 px-4 py-3 text-[15px] text-foreground outline-none transition-colors focus:border-primary aria-[invalid=true]:border-destructive"
               />
               <div className="mt-3 flex items-center gap-4">
                 <button
@@ -218,14 +245,16 @@ function MyDetailsCard({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setEditing(false)}
+                  onClick={cancel}
                   className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Cancel
                 </button>
               </div>
-              {mutation.isError && (
-                <p className="mt-3 text-sm text-destructive">Couldn't save. Please try again.</p>
+              {(error || mutation.isError) && (
+                <p className="mt-3 text-sm text-destructive">
+                  {error ?? "Couldn't save. Please try again."}
+                </p>
               )}
             </form>
           ) : (
