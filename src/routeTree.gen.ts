@@ -23,6 +23,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as TermsAndConditionsRouteImport } from './routes/terms-and-conditions'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
+import { Route as AuthenticatedMyProductsRouteImport } from './routes/_authenticated/my-products'
 import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -94,6 +95,11 @@ const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMyProductsRoute = AuthenticatedMyProductsRouteImport.update({
+  id: '/my-products',
+  path: '/my-products',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ProductsSlugRoute = ProductsSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/my-products': typeof AuthenticatedMyProductsRoute
   '/products/$slug': typeof ProductsSlugRoute
 }
 export interface FileRoutesByTo {
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/my-products': typeof AuthenticatedMyProductsRoute
   '/products/$slug': typeof ProductsSlugRoute
 }
 export interface FileRoutesById {
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
+  '/_authenticated/my-products': typeof AuthenticatedMyProductsRoute
   '/products/$slug': typeof ProductsSlugRoute
 }
 export interface FileRouteTypes {
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/terms-and-conditions'
     | '/account'
+    | '/my-products'
     | '/products/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/terms-and-conditions'
     | '/account'
+    | '/my-products'
     | '/products/$slug'
   id:
     | '__root__'
@@ -199,6 +210,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/terms-and-conditions'
     | '/_authenticated/account'
+    | '/_authenticated/my-products'
     | '/products/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -318,6 +330,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/my-products': {
+      id: '/_authenticated/my-products'
+      path: '/my-products'
+      fullPath: '/my-products'
+      preLoaderRoute: typeof AuthenticatedMyProductsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/products/$slug': {
       id: '/products/$slug'
       path: '/$slug'
@@ -330,10 +349,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
+  AuthenticatedMyProductsRoute: typeof AuthenticatedMyProductsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
+  AuthenticatedMyProductsRoute: AuthenticatedMyProductsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
