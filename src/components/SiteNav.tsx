@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Heart, Menu, Search, Shield, User, X } from "lucide-react";
+import { Heart, Menu, Search, Shield, ShoppingBag, User, X } from "lucide-react";
 import { useSession } from "@/hooks/useSession";
+import { useCart } from "@/lib/cart";
+
 
 
 const links = [
@@ -17,6 +19,7 @@ export function SiteNav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const { session } = useSession();
+  const { count, hydrated } = useCart();
 
 
   useEffect(() => {
@@ -83,6 +86,20 @@ export function SiteNav() {
             >
               <User className="size-4" />
             </Link>
+
+            <Link
+              to="/cart"
+              aria-label={hydrated && count > 0 ? `Cart, ${count} items` : "Cart"}
+              className="relative flex size-11 items-center justify-center rounded-full border border-border text-foreground/60 transition-colors hover:border-primary hover:text-primary"
+            >
+              <ShoppingBag className="size-4" />
+              {hydrated && count > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-medium text-primary-foreground">
+                  {count}
+                </span>
+              )}
+            </Link>
+
 
 
             <button
