@@ -198,15 +198,26 @@ function MyDetailsCard({
               className="mt-3"
               onSubmit={(e) => {
                 e.preventDefault();
-                mutation.mutate(value.trim());
+                const parsed = nameSchema.safeParse(value);
+                if (!parsed.success) {
+                  setError(parsed.error.issues[0]?.message ?? "Invalid name.");
+                  return;
+                }
+                setError(null);
+                mutation.mutate(parsed.data);
               }}
             >
               <input
                 autoFocus
                 value={value}
+                maxLength={100}
                 onChange={(e) => setValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") cancel();
+                }}
                 aria-label="Your name"
-                className="w-full rounded-xl border border-border bg-background/60 px-4 py-3 text-[15px] text-foreground outline-none transition-colors focus:border-primary"
+                aria-invalid={Boolean(error)}
+                className="w-full rounded-xl border border-border bg-background/60 px-4 py-3 text-[15px] text-foreground outline-none transition-colors focus:border-primary aria-[invalid=true]:border-destructive"
               />
               <div className="mt-3 flex items-center gap-4">
                 <button
@@ -218,14 +229,16 @@ function MyDetailsCard({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setEditing(false)}
+                  onClick={cancel}
                   className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Cancel
                 </button>
               </div>
-              {mutation.isError && (
-                <p className="mt-3 text-sm text-destructive">Couldn't save. Please try again.</p>
+              {(error || mutation.isError) && (
+                <p className="mt-3 text-sm text-destructive">
+                  {error ?? "Couldn't save. Please try again."}
+                </p>
               )}
             </form>
           ) : (
