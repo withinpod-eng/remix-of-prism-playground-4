@@ -7,6 +7,7 @@ import { useSession } from "@/hooks/useSession";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Reveal } from "@/components/Reveal";
+import { z } from "zod";
 import { fetchPurchases } from "@/lib/purchases";
 
 const TITLE = "Your Account | Jays Vault";
@@ -133,6 +134,13 @@ function AccountPage() {
     </div>
   );
 }
+
+/** Names are user-controlled text — validate before it reaches the database. */
+const nameSchema = z
+  .string()
+  .trim()
+  .min(1, { message: "Name cannot be empty." })
+  .max(100, { message: "Name must be less than 100 characters." });
 
 const cardClass =
   "relative h-full overflow-hidden rounded-[28px] border border-border bg-card/70 p-7 shadow-[0_30px_80px_-60px_rgba(0,0,0,0.9)] backdrop-blur-sm sm:p-9";
