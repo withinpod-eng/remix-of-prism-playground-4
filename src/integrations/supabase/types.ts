@@ -38,6 +38,45 @@ export type Database = {
         }
         Relationships: []
       }
+      purchases: {
+        Row: {
+          created_at: string
+          id: string
+          order_reference: string | null
+          product_category: string
+          product_slug: string
+          product_title: string
+          purchased_at: string
+          status: string
+          unit_price: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_reference?: string | null
+          product_category: string
+          product_slug: string
+          product_title: string
+          purchased_at?: string
+          status?: string
+          unit_price?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_reference?: string | null
+          product_category?: string
+          product_slug?: string
+          product_title?: string
+          purchased_at?: string
+          status?: string
+          unit_price?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
