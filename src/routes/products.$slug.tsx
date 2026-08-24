@@ -1,5 +1,7 @@
+import { useNavigate } from "@tanstack/react-router";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, Check, Download, ShieldCheck, Star } from "lucide-react";
+import { ArrowLeft, Check, Download, ShieldCheck, ShoppingBag, Star } from "lucide-react";
+import { useCart } from "@/lib/cart";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Reveal } from "@/components/Reveal";
@@ -65,6 +67,9 @@ function ProductMissing() {
 
 function ProductDetail() {
   const { product, related } = Route.useLoaderData();
+  const { addItem, items } = useCart();
+  const navigate = useNavigate();
+  const inCart = items.some((line) => line.slug === product.slug);
 
   return (
     <div className="min-h-screen bg-background">
@@ -130,15 +135,24 @@ function ProductDetail() {
                   </div>
 
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                    <button className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-primary px-7 font-medium text-primary-foreground transition-opacity hover:opacity-90">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        addItem(product.slug);
+                        navigate({ to: "/cart" });
+                      }}
+                      className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-primary px-7 font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                    >
                       <Download className="size-4" /> Buy Now
                     </button>
-                    <Link
-                      to="/contact"
-                      className="inline-flex h-12 flex-1 items-center justify-center rounded-full border border-border px-7 font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+                    <button
+                      type="button"
+                      onClick={() => addItem(product.slug)}
+                      className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full border border-border px-7 font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
                     >
-                      Ask a question
-                    </Link>
+                      <ShoppingBag className="size-4" />
+                      {inCart ? "In your Vault" : "Add to Cart"}
+                    </button>
                   </div>
 
                   <p className="mt-4 inline-flex items-center gap-2 text-xs text-muted-foreground">
