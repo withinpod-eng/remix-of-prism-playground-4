@@ -167,7 +167,7 @@ function CheckoutPage() {
                               </p>
                             </div>
                             <span className="font-mono text-sm text-foreground/90">
-                              {formatPrice(line.unitPrice * line.quantity)}
+                              {formatPrice(line.unitPrice)}
                             </span>
                           </li>
                         ))}
