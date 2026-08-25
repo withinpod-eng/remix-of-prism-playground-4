@@ -72,6 +72,7 @@ function ProductDetail() {
   const { isOwned } = useOwnedProducts();
   const navigate = useNavigate();
   const inCart = items.some((line) => line.slug === product.slug);
+  const owned = isOwned(product.slug);
 
   return (
     <div className="min-h-screen bg-background">
