@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { Reveal } from "@/components/Reveal";
 import { CartItemRow } from "@/components/CartItemRow";
 import { formatPrice, useCart } from "@/lib/cart";
+import { useOwnedProducts } from "@/hooks/useOwnedProducts";
 import emptyVault from "@/assets/empty-vault.jpg";
 
 export const Route = createFileRoute("/cart")({
@@ -101,19 +102,40 @@ function CartPage() {
             <>
               <Reveal delay={80}>
                 <div className="mt-14">
-                  <div className="hidden grid-cols-[minmax(0,1fr)_7rem_5rem_7rem_2.5rem] gap-6 border-b border-white/[0.07] pb-4 font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground md:grid">
+                  <div className="hidden grid-cols-[minmax(0,1fr)_10rem_8rem_2.5rem] gap-6 border-b border-white/[0.07] pb-4 font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground md:grid">
                     <span>Product</span>
+                    <span className="text-center">Licence</span>
                     <span className="text-right">Price</span>
-                    <span className="text-center">Qty</span>
-                    <span className="text-right">Total</span>
                     <span />
                   </div>
 
                   <ul>
                     {items.map((line) => (
-                      <CartItemRow key={line.slug} line={line} onRemove={removeItem} />
+                      <CartItemRow
+                        key={line.slug}
+                        line={line}
+                        owned={isOwned(line.slug)}
+                        onRemove={removeItem}
+                      />
                     ))}
                   </ul>
+
+                  {blocked && !ownedLoading ? (
+                    <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-destructive/40 bg-destructive/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-[14px] text-foreground/90">
+                        You already own {ownedInCart.length}{" "}
+                        {ownedInCart.length === 1 ? "product" : "products"} in this cart. Digital
+                        products can only be bought once.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => removeMany(ownedInCart.map((l) => l.slug))}
+                        className="h-11 shrink-0 rounded-xl border border-destructive/50 px-5 text-sm font-medium text-destructive transition-colors hover:bg-destructive hover:text-destructive-foreground"
+                      >
+                        Remove owned items
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
               </Reveal>
 
@@ -188,19 +210,27 @@ function CartPage() {
                     <dl className="mt-6 space-y-4 text-[15px]">
                       <div className="flex items-center justify-between">
                         <dt className="text-muted-foreground">Subtotal</dt>
-                        <dd className="font-mono text-foreground/90">{formatPrice(subtotal)}</dd>
+                        <dd className="font-mono text-foreground/90">
+                          {formatPrice(payableSubtotal)}
+                        </dd>
                       </div>
                       <div className="flex items-center justify-between">
                         <dt className="text-muted-foreground">Discount</dt>
                         <dd className="font-mono text-primary">
-                          {discount > 0 ? `− ${formatPrice(discount)}` : "—"}
+                          {payableDiscount > 0 ? `− ${formatPrice(payableDiscount)}` : "—"}
+                        </dd>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <dt className="text-muted-foreground">
+                          Items ({payable.length})
+                        </dt>
+                        <dd className="text-[13px] text-muted-foreground">
+                          Single licence each
                         </dd>
                       </div>
                       <div className="flex items-center justify-between">
                         <dt className="text-muted-foreground">Tax</dt>
-                        <dd className="text-[13px] text-muted-foreground">
-                          Calculated at checkout
-                        </dd>
+                        <dd className="text-[13px] text-muted-foreground">Included</dd>
                       </div>
                     </dl>
 
@@ -210,12 +240,21 @@ function CartPage() {
                           Total
                         </span>
                         <span className="font-display text-[32px] leading-none text-foreground transition-all duration-300">
-                          {formatPrice(total)}
+                          {formatPrice(payableTotal)}
                         </span>
                       </div>
                       <div className="mt-3 h-px w-16 bg-primary/70" />
                     </div>
 
+                    {blocked || payable.length === 0 ? (
+                      <button
+                        type="button"
+                        disabled
+                        className="mt-7 flex h-[54px] w-full cursor-not-allowed items-center justify-center rounded-2xl border border-border text-[15px] font-medium text-muted-foreground"
+                      >
+                        {payable.length === 0 ? "Nothing left to buy" : "Remove owned items to continue"}
+                      </button>
+                    ) : (
                     <Link
                       to="/checkout"
                       className="group mt-7 flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-primary text-[15px] font-medium text-primary-foreground shadow-[0_12px_40px_-14px_color-mix(in_oklab,var(--primary)_75%,transparent)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_52px_-12px_color-mix(in_oklab,var(--primary)_85%,transparent)]"
@@ -223,6 +262,7 @@ function CartPage() {
                       Proceed to Checkout
                       <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
                     </Link>
+                    )}
 
                     <p className="mt-4 inline-flex items-center gap-2 text-xs text-muted-foreground">
                       <Lock className="size-3.5 text-primary" /> Secure checkout
