@@ -6,6 +6,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { Reveal } from "@/components/Reveal";
 import { accessLabel, formatPrice, useCart } from "@/lib/cart";
 import { useSession } from "@/hooks/useSession";
+import { useOwnedProducts } from "@/hooks/useOwnedProducts";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -29,8 +31,16 @@ export const Route = createFileRoute("/checkout")({
 });
 
 function CheckoutPage() {
-  const { items, subtotal, discount, total, coupon, hydrated, clear } = useCart();
+  const { items, subtotal, discount, coupon, hydrated, clear, removeMany } = useCart();
   const { user } = useSession();
+  const { isOwned, refresh: refreshOwned } = useOwnedProducts();
+
+  const ownedInCart = items.filter((line) => isOwned(line.slug));
+  const payable = items.filter((line) => !isOwned(line.slug));
+  const subtotalDue = payable.reduce((sum, line) => sum + line.unitPrice, 0);
+  const discountDue =
+    subtotal > 0 ? Math.round((subtotalDue / subtotal) * discount * 100) / 100 : 0;
+  const total = Math.max(0, Math.round((subtotalDue - discountDue) * 100) / 100);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -41,20 +51,43 @@ function CheckoutPage() {
     if (user?.email && !email) setEmail(user.email);
   }, [user, email]);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setError("Enter a valid email so we can deliver your files.");
       return;
     }
+    if (payable.length === 0) {
+      setError("You already own everything in this cart.");
+      return;
+    }
     setError(null);
     setPlacing(true);
     const reference = `JV-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-    window.setTimeout(() => {
-      setPlaced({ reference, email: email.trim() });
-      setPlacing(false);
-      clear();
-    }, 900);
+
+    if (user) {
+      const { error: insertError } = await supabase.from("purchases").insert(
+        payable.map((line) => ({
+          user_id: user.id,
+          product_slug: line.slug,
+          product_title: line.product.title,
+          product_category: line.product.category,
+          unit_price: line.unitPrice,
+          status: "available",
+          order_reference: reference,
+        })),
+      );
+      if (insertError) {
+        setPlacing(false);
+        setError("We couldn't confirm your order. Please try again.");
+        return;
+      }
+      await refreshOwned();
+    }
+
+    setPlaced({ reference, email: email.trim() });
+    setPlacing(false);
+    clear();
   };
 
   return (
@@ -149,8 +182,24 @@ function CheckoutPage() {
 
                     <div className="mt-8 border-t border-white/[0.07] pt-7">
                       <h3 className="font-display text-[20px] text-foreground">Your order</h3>
+                      {ownedInCart.length > 0 ? (
+                        <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+                          <p className="text-[13px] text-foreground/90">
+                            {ownedInCart.length} item{ownedInCart.length === 1 ? "" : "s"} already in
+                            your vault {ownedInCart.length === 1 ? "was" : "were"} excluded — you
+                            can\u2019t buy the same product twice.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => removeMany(ownedInCart.map((l) => l.slug))}
+                            className="h-10 shrink-0 rounded-xl border border-destructive/50 px-4 text-[13px] font-medium text-destructive transition-colors hover:bg-destructive hover:text-destructive-foreground"
+                          >
+                            Remove them
+                          </button>
+                        </div>
+                      ) : null}
                       <ul className="mt-5 space-y-4">
-                        {items.map((line) => (
+                        {payable.map((line) => (
                           <li key={line.slug} className="flex items-start gap-4">
                             <img
                               src={line.product.image}
@@ -167,7 +216,7 @@ function CheckoutPage() {
                               </p>
                             </div>
                             <span className="font-mono text-sm text-foreground/90">
-                              {formatPrice(line.unitPrice * line.quantity)}
+                              {formatPrice(line.unitPrice)}
                             </span>
                           </li>
                         ))}
@@ -182,15 +231,19 @@ function CheckoutPage() {
 
                     <dl className="mt-6 space-y-4 text-[15px]">
                       <div className="flex items-center justify-between">
+                        <dt className="text-muted-foreground">Items ({payable.length})</dt>
+                        <dd className="text-[13px] text-muted-foreground">Single licence each</dd>
+                      </div>
+                      <div className="flex items-center justify-between">
                         <dt className="text-muted-foreground">Subtotal</dt>
-                        <dd className="font-mono text-foreground/90">{formatPrice(subtotal)}</dd>
+                        <dd className="font-mono text-foreground/90">{formatPrice(subtotalDue)}</dd>
                       </div>
                       <div className="flex items-center justify-between">
                         <dt className="text-muted-foreground">
                           Discount{coupon ? ` (${coupon.code})` : ""}
                         </dt>
                         <dd className="font-mono text-primary">
-                          {discount > 0 ? `− ${formatPrice(discount)}` : "—"}
+                          {discountDue > 0 ? `− ${formatPrice(discountDue)}` : "—"}
                         </dd>
                       </div>
                       <div className="flex items-center justify-between">
@@ -213,7 +266,7 @@ function CheckoutPage() {
 
                     <button
                       type="submit"
-                      disabled={placing}
+                      disabled={placing || payable.length === 0}
                       className="group mt-7 flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-primary text-[15px] font-medium text-primary-foreground shadow-[0_12px_40px_-14px_color-mix(in_oklab,var(--primary)_75%,transparent)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_52px_-12px_color-mix(in_oklab,var(--primary)_85%,transparent)] disabled:opacity-70"
                     >
                       {placing ? "Confirming…" : `Pay ${formatPrice(total)}`}

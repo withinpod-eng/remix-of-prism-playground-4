@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Check, Download, ShieldCheck, ShoppingBag, Star } from "lucide-react";
 import { useCart } from "@/lib/cart";
+import { useOwnedProducts } from "@/hooks/useOwnedProducts";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Reveal } from "@/components/Reveal";
@@ -68,8 +69,10 @@ function ProductMissing() {
 function ProductDetail() {
   const { product, related } = Route.useLoaderData();
   const { addItem, items } = useCart();
+  const { isOwned } = useOwnedProducts();
   const navigate = useNavigate();
   const inCart = items.some((line) => line.slug === product.slug);
+  const owned = isOwned(product.slug);
 
   return (
     <div className="min-h-screen bg-background">
@@ -134,6 +137,19 @@ function ProductDetail() {
                     <span className="text-sm text-muted-foreground">one-time payment</span>
                   </div>
 
+                  {owned ? (
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                      <Link
+                        to="/my-products"
+                        className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-primary px-7 font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                      >
+                        <Download className="size-4" /> Access in your Vault
+                      </Link>
+                      <span className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full border border-border px-7 text-sm text-muted-foreground">
+                        <ShoppingBag className="size-4" /> Already owned
+                      </span>
+                    </div>
+                  ) : (
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                     <button
                       type="button"
@@ -154,6 +170,7 @@ function ProductDetail() {
                       {inCart ? "In your Vault" : "Add to Cart"}
                     </button>
                   </div>
+                  )}
 
                   <p className="mt-4 inline-flex items-center gap-2 text-xs text-muted-foreground">
                     <ShieldCheck className="size-4 text-primary" /> Secure checkout · 14-day support
