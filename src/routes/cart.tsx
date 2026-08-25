@@ -31,8 +31,26 @@ export const Route = createFileRoute("/cart")({
 });
 
 function CartPage() {
-  const { items, subtotal, discount, total, coupon, removeItem, applyCoupon, removeCoupon, hydrated } =
-    useCart();
+  const {
+    items,
+    subtotal,
+    discount,
+    total,
+    coupon,
+    removeItem,
+    removeMany,
+    applyCoupon,
+    removeCoupon,
+    hydrated,
+  } = useCart();
+  const { isOwned, loading: ownedLoading } = useOwnedProducts();
+  const ownedInCart = items.filter((line) => isOwned(line.slug));
+  const payable = items.filter((line) => !isOwned(line.slug));
+  const payableSubtotal = payable.reduce((sum, line) => sum + line.unitPrice, 0);
+  const payableDiscount =
+    subtotal > 0 ? Math.round(((payableSubtotal / subtotal) * discount + Number.EPSILON) * 100) / 100 : 0;
+  const payableTotal = Math.max(0, Math.round((payableSubtotal - payableDiscount) * 100) / 100);
+  const blocked = ownedInCart.length > 0;
   const [code, setCode] = useState("");
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
 
