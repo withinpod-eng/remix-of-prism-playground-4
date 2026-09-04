@@ -293,7 +293,7 @@ const categoryCopy: Record<
   },
 };
 
-const fallback = categoryCopy["Design Assets"];
+const fallback = categoryCopy["Design Assets"]!;
 
 /** Tag-driven badge — only shown when the product genuinely carries the tag. */
 function badgeFor(product: Product): string | null {
@@ -312,10 +312,10 @@ export function getProductDetails(product: Product): ProductDetails {
   const start = galleryPool.indexOf(product.image);
 
   const gallery: GalleryShot[] = copy.captions.map((caption, i) => ({
-    src: galleryPool[(Math.max(start, 0) + i) % galleryPool.length],
+    src: galleryPool[(Math.max(start, 0) + i) % galleryPool.length]!,
     caption,
   }));
-  gallery[0] = { src: product.image, caption: copy.captions[0] };
+  gallery[0] = { src: product.image, caption: copy.captions[0]! };
 
   const highlights: Highlight[] = [
     specTag
@@ -323,7 +323,7 @@ export function getProductDetails(product: Product): ProductDetails {
       : { title: "Curated", detail: "Reviewed before it enters the Vault" },
     { title: "Instant access", detail: "Available right after successful payment" },
     copy.highlight,
-    { title: copy.license.title.split("—")[0].trim(), detail: "Rights as stated in the licence" },
+    { title: copy.license.title.split("—")[0]!.trim(), detail: "Rights as stated in the licence" },
   ];
 
   return {
