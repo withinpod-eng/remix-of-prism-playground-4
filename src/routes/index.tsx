@@ -31,13 +31,6 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const navLinks = [
-  { label: "Home", to: "/" },
-  { label: "Products", to: "/products" },
-  { label: "Drops", to: "/" },
-  { label: "Creators", to: "/" },
-  { label: "Contact", to: "/" },
-];
 
 const stats = [
   { value: "86K+", label: "Products Sold" },
