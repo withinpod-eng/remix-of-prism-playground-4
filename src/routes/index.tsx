@@ -66,41 +66,9 @@ function Index() {
           ))}
         </div>
 
+        <SiteNav />
+
         <div className="relative mx-auto max-w-7xl px-6 lg:px-10">
-          {/* NAV */}
-          <nav className="flex items-center justify-between py-7">
-            <ul className="hidden gap-7 text-sm text-foreground/80 md:flex">
-            {navLinks.map((l) => (
-              <li key={l.label}>
-                <Link
-                  to={l.to}
-                  className="transition-colors hover:text-primary"
-                  activeProps={{ className: "text-primary" }}
-                  activeOptions={{ exact: l.to === "/" }}
-                >
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-            </ul>
-            <div className="flex size-10 items-center justify-center rounded-full border border-border bg-background/30">
-              <Shield className="size-4 text-primary" />
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="hidden gap-2 sm:flex">
-                <IconPill>
-                  <Twitter className="size-4" />
-                </IconPill>
-                <IconPill>
-                  <Instagram className="size-4" />
-                </IconPill>
-              </div>
-              <button className="flex items-center gap-2 rounded-full border border-border bg-background/40 px-5 py-2.5 text-sm text-foreground backdrop-blur transition-colors hover:border-primary">
-                Menu
-                <Grid2x2 className="size-3.5" />
-              </button>
-            </div>
-          </nav>
 
           {/* HERO BODY */}
           <div className="relative grid gap-10 pb-24 pt-10 lg:grid-cols-12 lg:pb-32">
