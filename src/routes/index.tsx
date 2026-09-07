@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Github, Globe, Instagram, Twitter, Grid2x2, Shield, Zap } from "lucide-react";
+import { ArrowRight, Github, Globe, Instagram, Twitter, Shield, Zap } from "lucide-react";
 import heroVault from "@/assets/hero-vault.jpg";
+import { SiteNav } from "@/components/SiteNav";
 import { CategorySlider } from "@/components/CategorySlider";
 import { ProductSlider } from "@/components/ProductSlider";
 import { FaqSection } from "@/components/FaqSection";
